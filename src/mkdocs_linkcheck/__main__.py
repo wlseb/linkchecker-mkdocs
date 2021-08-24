@@ -70,7 +70,6 @@ def main():
     if bad:
         # using 22 following cURL
         # https://everything.curl.dev/usingcurl/returns
-        print("Bad links were found. Exiting with an error.")
         raise SystemExit(22)
 
 
