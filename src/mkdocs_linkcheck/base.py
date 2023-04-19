@@ -120,7 +120,9 @@ def extract_links( path: Path, ext: str, recurse: bool, domain: str, exclude: []
     # markup regex to extract links from <a href="">
     mu_regex = r"<a\s+(?:[^>]*?\s+)?href=([\"\'])(.*?)\1"
     mu_glob = re.compile(mu_regex)
-    # TODO: scan for <img src="">
+    # scan for <img src="">
+    img_regex = r"<img\s+(?:[^>]*?\s+)?src=([\"\'])(.*?)\1"
+    img_glob = re.compile(img_regex)
 
     local = []
     remote = []
@@ -129,9 +131,12 @@ def extract_links( path: Path, ext: str, recurse: bool, domain: str, exclude: []
         mu_hrefs = mu_glob.findall(fn.read_text(errors="ignore"))
         mu_urls = list(map(itemgetter(1), mu_hrefs))
         md_urls = md_glob.findall(fn.read_text(errors="ignore"))
-        links = mu_urls + md_urls
+        img_hrefs = img_glob.findall(fn.read_text(errors="ignore"))
+        img_urls = list(map(itemgetter(1), img_hrefs))
+        links = mu_urls + md_urls + img_urls
 
         for link in links:
+            logging.debug(f"extract_links() before exclusion: {link}")
             if link.startswith('mailto:'):
                 # Ignore mail links, do nothing for now.
                 continue
