@@ -1,3 +1,20 @@
+# Documenation specific for this fork (see below for original README)
+
+Features that are working
+* synchronous external link checking for pages and images
+* internal link checking for markdown pages (only error if mkdocs link would actually be broken)
+* internal image link checking
+
+Future TODOs
+* broke imports for proper package to have easier development. Currently the code is simply run by
+
+```
+python3 __main__.py --sync --exclude 192.168 -v path/to/markdown
+```
+
+* asynchronous external link checking seems to be broken
+* anchors are currently not checked
+
 # Link Checker for Mkdocs-based static generated sites
 
 This project was designed to help validate links associated with markdown-based, staticly generated website -- especially those published via [Mkdocs](https://www.mkdocs.org/). It is a fork of [linkcheckmd](https://github.com/scivision/linkchecker-markdown), and offers many enhancements over its predecessor. This project has the following features:
@@ -79,7 +96,7 @@ Optional arguments:
 * `-ext <str>` - file extension to scan
 * `-m {get,head}`, `--method {get,head}` - The HTTP method to use when testing remote links. The "head" method is faster but gives false positives. The "get" method is reliable but slower
 * `--sync` - enable synchronous checking of remote links, or do not use asyncio
-* `--exclude str` - a pattern for a file or path to exclude from being checked; use this argument multiple times to exclude multiple files. Regular expressions are ok. 
+* `--exclude str` - a pattern for a file or path to exclude from being checked; use this argument multiple times to exclude multiple files. Regular expressions are ok.
 * `-local` - check local files only
 * `-r`, `--recurse` - recurse through all directories under path
 * `-v` or `--verbose` -prints the URLs as they are checked
