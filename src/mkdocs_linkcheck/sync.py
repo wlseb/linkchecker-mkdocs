@@ -27,12 +27,12 @@ def check_urls(
     bads: list[tuple[str, str, T.Any]] = []
     warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
     missing = []
-    
+
     with requests.Session() as sess:
         if hdr:
             sess.headers.update(hdr)
             sess.max_redirects = 5
-            
+
         # %% loop
         for u in urls:
             url = u['url']
@@ -61,9 +61,9 @@ def check_urls(
                 logging.info(f'NOT FOUND: {url:80s}')
             else:
                 logging.info(f"OK: {url:80s}")
-                
+
     return missing
-            
+
 def retry(url: str, hdr: dict[str, str] = None, verifycert: bool = False) -> bool:
     ok = False
     try:

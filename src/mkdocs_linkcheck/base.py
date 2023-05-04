@@ -79,24 +79,24 @@ def check_links(
         link = re.sub(r'#.*$','',str(link))
         SUMMARY['local'] += 1
         SUMMARY['total'] += 1
-        check_local( link, ext=ext, fn=l['fn'], path=l['path'] )        
+        check_local( link, ext=ext, fn=l['fn'], path=l['path'] )
 
     """
     This is kind of broken. At this point all of the remote URLs have been discovered, yet
     the legacy library will scan paths again.
-    We should pass the list of URLs to test to the helper functions, and not have the 
-    helper functons rescan paths. 
-    """    
+    We should pass the list of URLs to test to the helper functions, and not have the
+    helper functons rescan paths.
+    """
     if not local:
         # TODO: check to see if the URL is in the exclusion list
         SUMMARY['total'] += len(remote_links)
         SUMMARY['remote'] += len(remote_links)
         missing = check_remotes( urls=remote_links, hdr=hdr, method=method, use_async=use_async )
         for fn, url, status in missing:
-            if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = [] 
+            if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
             SUMMARY['problems'][fn].append( [ url, 'dead' ] )
             SUMMARY['broken'] += 1
-        
+
     bad = None
     if SUMMARY['broken'] > 0: bad = 1
 
@@ -125,7 +125,7 @@ def extract_links( path: Path, ext: str, recurse: bool, domain: str, exclude: []
     local = []
     remote = []
     for fn in files.get(path, ext, recurse):
-        SUMMARY['files_checked'] += 1 
+        SUMMARY['files_checked'] += 1
         mu_hrefs = mu_glob.findall(fn.read_text(errors="ignore"))
         mu_urls = list(map(itemgetter(1), mu_hrefs))
         md_urls = md_glob.findall(fn.read_text(errors="ignore"))
@@ -136,7 +136,7 @@ def extract_links( path: Path, ext: str, recurse: bool, domain: str, exclude: []
                 continue
             elif exclude and exclude_link( link, exclude ):
                 SUMMARY['skipped'] += 1
-                if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = [] 
+                if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
                 SUMMARY['problems'][fn].append( [ link, 'ignored' ] )
                 continue
             if is_remote_url( link, domain, ext ):
@@ -144,7 +144,7 @@ def extract_links( path: Path, ext: str, recurse: bool, domain: str, exclude: []
             else:
                 local.append( { 'url': link, 'fn': fn, 'path': path } )
     return local, remote
-                
+
 def is_remote_url( url, domain, ext ) -> bool:
     if domain:
         pat = "https?://" + domain + r"[=a-zA-Z0-9\_\/\?\&\%\+\#\.\-]*"
@@ -153,28 +153,28 @@ def is_remote_url( url, domain, ext ) -> bool:
         #pat = r"https?://[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[=a-zA-Z0-9\_\/\?\&\%\+\#\.\-]+"
     glob = re.compile(pat)
     return glob.search( url )
-    
+
 def check_local(url: str, ext: str, fn: str, path: str ): #-> T.Iterable[tuple[str, str]]:
     """check internal links of Markdown files
     this is a simple static analysis; only plain filename references are handled.
     """
     stem = url.strip("/")
     simp_fn = str(fn).strip(ext)
-    simp_fn = re.sub(r'index$','',str(simp_fn)) 
+    simp_fn = re.sub(r'index$','',str(simp_fn))
     full_path = Path( os.path.join( simp_fn, url ) ).resolve()
     img_glob = re.compile(r'.(png|jpeg|jpg|gif|svg)$',flags=re.IGNORECASE)
-    
+
     if len(url) == 0:
         # URL is empty
         SUMMARY['empty'] += 1
-        if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = [] 
+        if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
         SUMMARY['problems'][fn].append( [ url, 'empty' ] )
         logging.info(f"Empty link in: {fn}")
     elif img_glob.search(str(full_path)):
         # File is an image
         if not Path(full_path).is_file():
             SUMMARY['broken'] += 1
-            if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = [] 
+            if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
             logging.info(f"Broken image: {url}")
             SUMMARY['problems'][fn].append( [ url, 'dead' ] )
     else:
@@ -182,10 +182,10 @@ def check_local(url: str, ext: str, fn: str, path: str ): #-> T.Iterable[tuple[s
         fn2 = str(full_path) + '/index' + ext
         if not Path(fn1).is_file() and not Path(fn2).is_file():
             SUMMARY['broken'] += 1
-            if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = [] 
+            if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
             logging.info(f"Broken link: {url}")
             SUMMARY['problems'][fn].append( [ url, 'dead' ] )
- 
+
 def check_remotes(
     urls,
     *,
