@@ -33,6 +33,9 @@ def main():
         "-v", "--verbose",
         action="store_true")
     p.add_argument(
+        "-d", "--debug",
+        action="store_true")
+    p.add_argument(
         "--sync",
         help="don't use asyncio",
         action="store_true")
@@ -52,6 +55,8 @@ def main():
 
     if P.verbose:
         logging.basicConfig(level=logging.INFO)
+    if P.debug:
+        logging.basicConfig(level=logging.DEBUG)
 
     tic = time.monotonic()
     bad = check_links(

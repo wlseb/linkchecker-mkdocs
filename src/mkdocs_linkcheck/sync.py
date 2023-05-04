@@ -36,6 +36,7 @@ def check_urls(
         # %% loop
         for u in urls:
             url = u['url']
+            logging.debug(f"Checking remote synchronoulsy, path:{u['path']} fn:{u['fn']} url:{u['url']} ...")
             try:
                 R = sess.head(url, allow_redirects=True, timeout=TIMEOUT, verify=verifycert)
                 if R.status_code in RETRYCODES:

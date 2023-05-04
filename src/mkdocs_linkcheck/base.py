@@ -130,6 +130,7 @@ def extract_links( path: Path, ext: str, recurse: bool, domain: str, exclude: []
         mu_urls = list(map(itemgetter(1), mu_hrefs))
         md_urls = md_glob.findall(fn.read_text(errors="ignore"))
         links = mu_urls + md_urls
+
         for link in links:
             if link.startswith('mailto:'):
                 # Ignore mail links, do nothing for now.
@@ -142,7 +143,7 @@ def extract_links( path: Path, ext: str, recurse: bool, domain: str, exclude: []
             if is_remote_url( link, domain, ext ):
                 remote.append( { 'url': link, 'fn': fn, 'path': path } )
             else:
-                local.append( { 'url': link, 'fn': fn, 'path': path } )
+                local.append( { 'url': link, 'fn': str(fn), 'path': path } )
     return local, remote
 
 def is_remote_url( url, domain, ext ) -> bool:
@@ -158,11 +159,11 @@ def check_local(url: str, ext: str, fn: str, path: str ): #-> T.Iterable[tuple[s
     """check internal links of Markdown files
     this is a simple static analysis; only plain filename references are handled.
     """
-    stem = url.strip("/")
-    simp_fn = str(fn).strip(ext)
-    simp_fn = re.sub(r'index$','',str(simp_fn))
-    full_path = Path( os.path.join( simp_fn, url ) ).resolve()
+    # TODO better to know from link type if image or not
+
     img_glob = re.compile(r'.(png|jpeg|jpg|gif|svg)$',flags=re.IGNORECASE)
+
+    logging.debug(f"Checking local, fn:{fn} url:{url} ext: {ext}")
 
     if len(url) == 0:
         # URL is empty
@@ -170,21 +171,40 @@ def check_local(url: str, ext: str, fn: str, path: str ): #-> T.Iterable[tuple[s
         if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
         SUMMARY['problems'][fn].append( [ url, 'empty' ] )
         logging.info(f"Empty link in: {fn}")
-    elif img_glob.search(str(full_path)):
+    elif img_glob.search(url):
         # File is an image
-        if not Path(full_path).is_file():
+        full_path = Path(fn).parent.joinpath(url).resolve()
+        if not full_path.is_file():
             SUMMARY['broken'] += 1
             if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
-            logging.info(f"Broken image: {url}")
+            logging.info(f"Broken image: url:{url} full_path:{full_path}")
             SUMMARY['problems'][fn].append( [ url, 'dead' ] )
     else:
-        fn1 = str(full_path).rstrip("/") + ext
-        fn2 = str(full_path) + '/index' + ext
-        if not Path(fn1).is_file() and not Path(fn2).is_file():
-            SUMMARY['broken'] += 1
-            if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
-            logging.info(f"Broken link: {url}")
-            SUMMARY['problems'][fn].append( [ url, 'dead' ] )
+        if url.endswith(ext):
+            # end with .md => folder-name + url
+            full_path = Path(fn).parent.joinpath(url).resolve()
+            if not full_path.is_file():
+                SUMMARY['broken'] += 1
+                if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
+                logging.info(f"Broken link: {url} full_path:{full_path}")
+                SUMMARY['problems'][fn].append( [ url, 'dead' ] )
+        else:
+            # where current file is served
+            if Path(fn).name == ('index' + ext): # maybe also README
+                orig_server_folder = Path(fn).parent
+            else:
+                orig_server_folder = Path(fn.removesuffix(ext))
+            # where new file is served
+            server_folder = orig_server_folder.joinpath(url).resolve()
+            # places the server checks
+            path1 = server_folder.joinpath('index' + ext)  # e.g. /topic/index.md
+            path2 = Path(str(server_folder) + ext)  # e.g. /topic.md . Special case index/index.md not allowed, see below
+            logging.debug(f"Checking local,\n server_folder: {server_folder}\n path1:{path1}\n path2:{path2}")
+            if not path1.is_file() and not (server_folder.name != 'index' and path2.is_file()):
+                SUMMARY['broken'] += 1
+                if fn not in SUMMARY['problems']: SUMMARY['problems'][fn] = []
+                logging.info(f"Broken link: {url} (neither {path1} nor {path2})")
+                SUMMARY['problems'][fn].append( [ url, 'dead' ] )
 
 def check_remotes(
     urls,
