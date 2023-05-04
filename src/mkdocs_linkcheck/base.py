@@ -7,9 +7,9 @@ import asyncio
 import os
 from operator import itemgetter
 
-from .coro import check_urls as check_urls_async
-from .sync import check_urls as check_urls_sync
-from . import files
+from coro import check_urls as check_urls_async
+from sync import check_urls as check_urls_sync
+import files
 
 # http://www.useragentstring.com
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0"

@@ -6,7 +6,7 @@ import warnings
 import urllib3
 import logging
 from pathlib import Path
-from . import files
+import files
 
 TIMEOUT = 3
 RETRYCODES = (400, 404, 405, 503)

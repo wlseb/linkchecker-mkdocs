@@ -10,7 +10,7 @@ import os
 
 import aiohttp
 
-from . import files
+import files
 
 # tuples, not lists
 
